@@ -1,0 +1,21 @@
+* component-runtime :: standalone :: demo using framework in full java
+
+** standalone
+This is a demo project for showing how to use component-runtime with a full java independent project.
+Main trick for fixing classloader and injections issues relies on the =internal= package.
+Inspired from =component-runtime-junit= module.
+
+** Roadmap and potential enhancements
+- move internals to a framework module.
+- allow to specify more than one connector.
+- add a default lookup for plugin artifact if jarLocation is not specified in =@WithConnector= annotation.
+- as above with artifact specified in pom.
+- handling =Job= like class making pipelines.
+- add more convenience methods like =getInputIterator=.
+- handle grpc data output.
+- dockerize project maven goal.
+- make a starter-toolkit template for Qlik eco-system.
+
+
+
+

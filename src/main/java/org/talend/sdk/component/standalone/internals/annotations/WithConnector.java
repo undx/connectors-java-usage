@@ -11,7 +11,7 @@
  * specific language governing permissions and limitations under the License.
  *
  */
-package org.talend.connectors.internal;
+package org.talend.sdk.component.standalone.internals.annotations;
 
 import static java.lang.annotation.ElementType.TYPE;
 import static java.lang.annotation.RetentionPolicy.RUNTIME;
@@ -19,9 +19,11 @@ import static java.lang.annotation.RetentionPolicy.RUNTIME;
 import java.lang.annotation.Retention;
 import java.lang.annotation.Target;
 
+import org.talend.sdk.component.standalone.internals.ConnectorsHandler;
+
 /**
  * Marks a class as running under Talend Component Kit context
- * and makes available ComponentsHandler as an injection.
+ * and makes available ConnectorsHandler as an injection.
  */
 @Target(TYPE)
 @Retention(RUNTIME)

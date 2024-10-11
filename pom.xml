@@ -4,14 +4,20 @@
     xsi:schemaLocation="http://maven.apache.org/POM/4.0.0 http://maven.apache.org/xsd/maven-4.0.0.xsd">
     <modelVersion>4.0.0</modelVersion>
 
-    <groupId>org.talend.sdk.rest</groupId>
-    <artifactId>connectors-java-usage</artifactId>
+    <groupId>org.talend.sdk.component</groupId>
+    <artifactId>standalone</artifactId>
     <version>1.0-SNAPSHOT</version>
+    <name>component-runtime :: standalone :: demo using framework in full java</name>
 
     <properties>
         <maven.compiler.source>11</maven.compiler.source>
         <maven.compiler.target>11</maven.compiler.target>
         <project.build.sourceEncoding>UTF-8</project.build.sourceEncoding>
+        <!-- dependencies versions -->
+        <component-runtime.version>1.64.8</component-runtime.version>
+        <connectors.version>1.61.0</connectors.version>
+        <slf4j.version>2.0.13</slf4j.version>
+        <lombok.version>1.18.30</lombok.version>
     </properties>
 
     <repositories>
@@ -58,40 +64,38 @@
     </repositories>
 
     <dependencies>
+        <!-- framework -->
         <dependency>
             <groupId>org.talend.sdk.component</groupId>
             <artifactId>component-api</artifactId>
-            <version>1.64.8</version>
+            <version>${component-runtime.version}</version>
         </dependency>
         <dependency>
             <groupId>org.talend.sdk.component</groupId>
             <artifactId>component-runtime-manager</artifactId>
-            <version>1.64.8</version>
+            <version>${component-runtime.version}</version>
         </dependency>
-        <dependency>
-            <groupId>org.talend.sdk.component</groupId>
-            <artifactId>component-runtime-junit</artifactId>
-            <version>1.64.8</version>
-        </dependency>
+        <!-- connectors -->
         <dependency>
             <groupId>org.talend.components</groupId>
             <artifactId>jdbc</artifactId>
-            <version>1.61.0</version>
+            <version>${connectors.version}</version>
         </dependency>
+        <!-- tooling -->
         <dependency>
             <groupId>org.slf4j</groupId>
             <artifactId>slf4j-api</artifactId>
-            <version>2.0.13</version>
+            <version>${slf4j.version}</version>
         </dependency>
         <dependency>
             <groupId>org.slf4j</groupId>
             <artifactId>slf4j-simple</artifactId>
-            <version>2.0.13</version>
+            <version>${slf4j.version}</version>
         </dependency>
         <dependency>
             <groupId>org.projectlombok</groupId>
             <artifactId>lombok</artifactId>
-            <version>1.18.30</version>
+            <version>${lombok.version}</version>
             <scope>provided</scope>
         </dependency>
     </dependencies>

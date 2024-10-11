@@ -11,7 +11,7 @@
  * specific language governing permissions and limitations under the License.
  *
  */
-package org.talend.connectors.internal;
+package org.talend.sdk.component.standalone.internals.annotations;
 
 import java.lang.annotation.Documented;
 import java.lang.annotation.ElementType;
@@ -20,10 +20,13 @@ import java.lang.annotation.Retention;
 import java.lang.annotation.RetentionPolicy;
 import java.lang.annotation.Target;
 
-@Target({ ElementType.TYPE, ElementType.METHOD, ElementType.FIELD, ElementType.PARAMETER})
+import org.talend.sdk.component.standalone.internals.ConnectorsHandler;
+
+@Target({ ElementType.TYPE, ElementType.METHOD, ElementType.FIELD, ElementType.PARAMETER })
 @Retention(RetentionPolicy.RUNTIME)
 @Documented
 @Inherited
 public @interface ExtendWith {
+
     Class<? extends ConnectorsHandler>[] value();
 }
