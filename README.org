@@ -2,7 +2,9 @@
 
 ** standalone
 This is a demo project for showing how to use component-runtime with a full java independent project.
+
 Main trick for fixing classloader and injections issues relies on the =internal= package.
+
 Inspired from =component-runtime-junit= module.
 
 ** Roadmap and potential enhancements
