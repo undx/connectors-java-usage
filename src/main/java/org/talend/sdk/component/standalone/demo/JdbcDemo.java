@@ -91,10 +91,10 @@ public class JdbcDemo extends ConnectorsHandler {
 
     private void setup() {
         connection = new JdbcConnection();
-        connection.setDbType(DB_TYPE);
-        connection.setJdbcUrl(JDBC_URL);
-        connection.setUserId(JDBC_USER);
-        connection.setPassword(JDBC_PASS);
+        connection.setDbType(JdbcDemo.DB_TYPE);
+        connection.setJdbcUrl(JdbcDemo.JDBC_URL);
+        connection.setUserId(JdbcDemo.JDBC_USER);
+        connection.setPassword(JdbcDemo.JDBC_PASS);
         // use jdbcService to create datasource...
         datasource = jdbcService.createDataSource(connection);
         JdbcDemo.log.warn("[initConfigurations] datasource driver id: {} ", datasource.getDriverId());
