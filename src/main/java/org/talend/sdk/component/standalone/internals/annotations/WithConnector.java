@@ -16,10 +16,14 @@ package org.talend.sdk.component.standalone.internals.annotations;
 import static java.lang.annotation.ElementType.TYPE;
 import static java.lang.annotation.RetentionPolicy.RUNTIME;
 
+import java.lang.annotation.Repeatable;
 import java.lang.annotation.Retention;
 import java.lang.annotation.Target;
 
 import org.talend.sdk.component.standalone.internals.ConnectorsHandler;
+
+import lombok.Getter;
+import lombok.RequiredArgsConstructor;
 
 /**
  * Marks a class as running under Talend Component Kit context
@@ -27,6 +31,7 @@ import org.talend.sdk.component.standalone.internals.ConnectorsHandler;
  */
 @Target(TYPE)
 @Retention(RUNTIME)
+@Repeatable(WithConnectors.class)
 @ExtendWith(ConnectorsHandler.class)
 public @interface WithConnector {
 
@@ -36,9 +41,35 @@ public @interface WithConnector {
     String value();
 
     /**
-     * @return plugin's jar path.
+     * You can force the id of the plugin instead of using component-manager auto-naming.
+     * @return id of plugin's container.
      */
-    String jarLocation();
+    String id() default "";
+
+    /**
+     * Specify plugin's provisioning mode. You can select:
+     * <ul>
+     *     <li><b>GAV</b> form like <code>groupId:artifactId:version</code>. </li>
+     *     <li><b>JAR</b> path to the artifact relative to m2 repository like <code>org/talend/component/jdbc/1.61.0/jdbc-1.61.0.jar</code> or absolute path like <code>~/jdbc-1.61.0.jar</code></li>
+     * </ul>
+     * @return provisioning mode: GAV or JAR.
+     */
+    ProvisioningMode provision() default ProvisioningMode.GAV;
+
+    @RequiredArgsConstructor
+    enum ProvisioningMode {
+        /**
+         * plugin's GAV coordinates.
+         */
+        GAV("gav"),
+        /**
+         * plugin's jar path. Full path or relative to m2 repository.
+         */
+        JAR("jar");
+
+        @Getter
+        private final String key;
+    }
 
     /**
      * You can isolate some packages during the test.
