@@ -21,7 +21,6 @@ import static java.util.Collections.singletonList;
 import static java.util.Comparator.comparing;
 import static java.util.Locale.ROOT;
 import static java.util.Optional.ofNullable;
-import static java.util.stream.Collectors.toList;
 import static lombok.AccessLevel.PRIVATE;
 
 import java.io.ByteArrayOutputStream;
@@ -35,7 +34,6 @@ import java.util.HashSet;
 import java.util.Iterator;
 import java.util.List;
 import java.util.Map;
-import java.util.Objects;
 import java.util.Optional;
 import java.util.Set;
 import java.util.concurrent.CopyOnWriteArrayList;
@@ -52,6 +50,7 @@ import org.apache.xbean.finder.filter.Filter;
 import org.talend.sdk.component.api.record.Record;
 import org.talend.sdk.component.api.service.injector.Injector;
 import org.talend.sdk.component.api.service.record.RecordBuilderFactory;
+import org.talend.sdk.component.dependencies.maven.MvnCoordinateToFileConverter;
 import org.talend.sdk.component.runtime.base.Lifecycle;
 import org.talend.sdk.component.runtime.input.Input;
 import org.talend.sdk.component.runtime.input.Mapper;
@@ -68,6 +67,7 @@ import org.talend.sdk.component.runtime.manager.xbean.registry.EnrichedPropertyE
 import org.talend.sdk.component.runtime.output.Processor;
 import org.talend.sdk.component.runtime.record.RecordConverters;
 import org.talend.sdk.component.runtime.standalone.DriverRunner;
+import org.talend.sdk.component.standalone.internals.Connectors.Connector;
 import org.talend.sdk.component.standalone.internals.annotations.WithConnector;
 
 import lombok.AllArgsConstructor;
@@ -79,27 +79,11 @@ public class ConnectorsHandler {
 
     protected static final Local<State> STATE = ConnectorsHandler.loadStateHolder();
 
-    public ConnectorsHandler() {
-        final WithConnector annotation = getClass().getAnnotation(WithConnector.class);
-        if (null != annotation) {
-            packageName = annotation.value();
-            jarLocation = annotation.jarLocation();
-            if (0 < annotation.isolatedPackages().length) {
-                isolatedPackages =
-                        Stream.concat(Stream.of(packageName), Stream.of(annotation.isolatedPackages()))
-                                .filter(Objects::nonNull)
-                                .collect(toList());
-            }
-        }
-        start();
-        injectServices(this);
-    }
-
     private final ThreadLocal<PreState> initState = ThreadLocal.withInitial(PreState::new);
 
     protected String packageName;
 
-    protected String jarLocation;
+    protected Collection<Connector> connectors;
 
     protected Collection<String> isolatedPackages;
 
@@ -110,6 +94,15 @@ public class ConnectorsHandler {
         default:
             return new Local.ThreadLocalImpl<>();
         }
+    }
+
+    public ConnectorsHandler() {
+        final WithConnector[] annotations = getClass().getAnnotationsByType(WithConnector.class);
+        final Connectors annotatedConnectors = Connectors.fromAnnotations(annotations);
+        isolatedPackages = annotatedConnectors.getAllIsolatedPackages();
+        connectors = annotatedConnectors.getPlugins().values();
+        start();
+        injectServices(this);
     }
 
     public static <T> Map<String, String> configurationByExample(final T instance, final String prefix) {
@@ -124,13 +117,15 @@ public class ConnectorsHandler {
         if (null == instance) {
             return null;
         }
-        final String plugin = getSinglePlugin();
-        final Map<Class<?>, Object> services = asManager()
-                .findPlugin(plugin)
-                .orElseThrow(() -> new IllegalArgumentException("cant find plugin '" + plugin + "'"))
-                .get(ComponentManager.AllServices.class)
-                .getServices();
-        ((Injector) services.get(Injector.class)).inject(instance);
+        getPlugins().forEach(plugin -> {
+            final Map<Class<?>, Object> services = asManager()
+                    .findPlugin(plugin)
+                    .orElseThrow(() -> new IllegalArgumentException("cant find plugin '" + plugin + "'"))
+                    .get(ComponentManager.AllServices.class)
+                    .getServices();
+            ((Injector) services.get(Injector.class)).inject(instance);
+        });
+
         return instance;
     }
 
@@ -140,7 +135,7 @@ public class ConnectorsHandler {
 
 
     public EmbeddedComponentManager start() {
-        final EmbeddedComponentManager embeddedComponentManager = new EmbeddedComponentManager(packageName, jarLocation) {
+        final EmbeddedComponentManager embeddedComponentManager = new EmbeddedComponentManager(connectors) {
 
             @Override
             protected boolean isContainerClass(final Filter filter, final String name) {
@@ -313,12 +308,20 @@ public class ConnectorsHandler {
 
         private final ComponentManager oldInstance;
 
+        private final MvnCoordinateToFileConverter mvnCoordinateToFileConverter = new MvnCoordinateToFileConverter();
+
         private final List<String> plugins = new ArrayList<>();
 
-        private EmbeddedComponentManager(final String componentPackage, final String jarLocation) {
-            super(ComponentManager.findM2());
-            addPlugin(jarLocation);
-            plugins.add(componentPackage);
+        private EmbeddedComponentManager(final Collection<Connector> connectors) {
+            super(findM2());
+            connectors.stream().forEach(connector -> {
+                final String name = connector.getId().isEmpty() ? "" : connector.getId();
+                final String path = connector.getProvisioning().equals("gav")
+                        ? mvnCoordinateToFileConverter.toArtifact(connector.getArtifact()).toPath()
+                        : connector.getArtifact();
+                log.warn("[EmbeddedComponentManager] name: {} path: {}", name, path);
+                plugins.add(name.isEmpty() ? addPlugin(path) : addPlugin(name, path));
+            });
             oldInstance = contextualInstance().get();
             contextualInstance().set(this);
         }
