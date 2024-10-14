@@ -37,6 +37,12 @@ Example:
 
 But, you can specify also another provisioning way, see the =@WithConnector= annotation for specifying other mode.
 
+Example:
+#+BEGIN_SRC java
+@WithConnector(id = "jdbc-patched", provision = ProvisioningMode.JAR, value = "/home/undx/jdbc-1.61.0.jar")
+#+END_SRC
+
+
 ** Roadmap and potential enhancements
 - +allow to specify more than one connector.+
 - +add a default lookup for plugin artifact if jarLocation is not specified in =@WithConnector= annotation.+
