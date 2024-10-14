@@ -1,5 +1,8 @@
 * component-runtime :: standalone :: demo using framework in full java
 
+*DESIGN STILL IN PROGRESS*, breaking changes may come at each commit...
+Make sure to fetch changes often and follow this README.
+
 ** standalone
 This is a demo project for showing how to use component-runtime with a full java independent project.
 
@@ -21,17 +24,30 @@ public class JdbcDemo extends ConnectorsHandler {
 
 See _JdbcDemo_ in project.
 
+*** @WithConnector annotation
+
+You can repeat this annotation for each connectors you need (ie handling more than one connector).
+
+By default, GAV notation is handled.
+
+Example:
+#+BEGIN_SRC java
+@WithConnector("org.talend.components:jms-connector:1.62.0-SNAPSHOT")
+#+END_SRC
+
+But, you can specify also another provisioning way, see the =@WithConnector= annotation for specifying other mode.
 
 ** Roadmap and potential enhancements
+- +allow to specify more than one connector.+
+- +add a default lookup for plugin artifact if jarLocation is not specified in =@WithConnector= annotation.+
+- +as above with artifact specified in pom.+
 - move internals to a framework module.
-- allow to specify more than one connector.
-- add a default lookup for plugin artifact if jarLocation is not specified in =@WithConnector= annotation.
-- as above with artifact specified in pom.
 - handling =Job= like class making pipelines.
 - add more convenience methods like =getInputIterator=.
 - handle grpc data output.
 - dockerize project maven goal.
 - make a starter-toolkit template for Qlik eco-system.
+- handle the @WithConnector annotation with Intellij plugin.
 
 
 

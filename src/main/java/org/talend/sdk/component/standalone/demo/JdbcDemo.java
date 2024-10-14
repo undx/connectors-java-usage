@@ -31,6 +31,10 @@ import org.talend.components.jdbc.service.JdbcService;
 import org.talend.components.jdbc.service.JdbcService.JdbcDatasource;
 import org.talend.components.jdbc.service.UIActionService;
 import org.talend.components.jdbc.service.UIActionService.TableInfo;
+import org.talend.components.jms.data.JMSVersion;
+import org.talend.components.jms.dataset.JMSDataset;
+import org.talend.components.jms.datastore.JMSDatastore;
+import org.talend.components.jms.service.JMSService;
 import org.talend.sdk.component.api.record.Record;
 import org.talend.sdk.component.api.record.Schema;
 import org.talend.sdk.component.api.service.Service;
@@ -40,20 +44,35 @@ import org.talend.sdk.component.runtime.input.Input;
 import org.talend.sdk.component.runtime.input.Mapper;
 import org.talend.sdk.component.standalone.internals.ConnectorsHandler;
 import org.talend.sdk.component.standalone.internals.annotations.WithConnector;
+import org.talend.sdk.component.standalone.internals.annotations.WithConnector.ProvisioningMode;
 
 import lombok.extern.slf4j.Slf4j;
 
 @Slf4j
-@WithConnector(value = "jdbc", jarLocation = "/home/undx/.m2/repository/org/talend/components/jdbc/1.61.0/jdbc-1.61.0.jar")
+@WithConnector(id = "jdbc-patched", provision = ProvisioningMode.JAR, value = JdbcDemo.LOCATION)
+@WithConnector("org.talend.components:jms-connector:1.62.0-SNAPSHOT")
+@WithConnector("org.talend.components:jms-connector:1.62.0-SNAPSHOT") // same hash so will be discarded...
 public class JdbcDemo extends ConnectorsHandler {
 
+    /* CHANGE ME */
     public static final String DB_TYPE = "MySQL";
 
+    /* CHANGE ME */
     public static final String JDBC_URL = "jdbc:mysql://localhost:3306/mydatabase";
 
+    /* CHANGE ME */
     public static final String JDBC_USER = "user";
 
+    /* CHANGE ME */
     public static final String JDBC_PASS = "password";
+
+    public static final String LOCATION = "/home/undx/jdbc-1.61.0.jar";
+
+    public static final String LOCATION_REL = "org/talend/components/jdbc/1.61.0/jdbc-1.61.0.jar";
+
+    public static final String GAV = "org.talend.components:jdbc:1.61.0";
+
+    public static final String JAR_LOCATION = LOCATION_REL;
 
     JdbcConnection connection;
 
@@ -62,6 +81,10 @@ public class JdbcDemo extends ConnectorsHandler {
     JdbcDatasource datasource;
 
     InputTableNameConfig tableconfig;
+
+    JMSDataset jmsDataset;
+
+    JMSDatastore jmsDatastore;
 
     /**
      * jdbc connector services
@@ -72,9 +95,11 @@ public class JdbcDemo extends ConnectorsHandler {
     @Service
     JdbcService jdbcService;
 
-    public JdbcDemo() {
-        setup();
-    }
+    @Service
+    JMSService jmsService;
+
+    @Service
+    org.talend.components.jms.service.UIActionService jmsUiService;
 
     public static void main(String[] args) {
         try {
@@ -87,6 +112,11 @@ public class JdbcDemo extends ConnectorsHandler {
         } catch (Exception e) {
             log.error("[main]", e);
         }
+    }
+
+    public JdbcDemo() {
+        setup();
+        log.warn("[JdbcDemo] m2: {}", System.getProperty("talend.component.manager.m2.repository"));
     }
 
     private void setup() {
@@ -105,6 +135,18 @@ public class JdbcDemo extends ConnectorsHandler {
         // tableInput
         tableconfig = new InputTableNameConfig();
         tableconfig.setDataSet(dataset);
+        //
+        // JMS
+        //
+        jmsDatastore = new JMSDatastore();
+        jmsDatastore.setProviderId("activemq");
+        jmsDatastore.setUserName("user");
+        jmsDatastore.setPassword("pass");
+        jmsDatastore.setServerURL("jms://localhost");
+        jmsDatastore.setJmsVersion(JMSVersion.JMS_2);
+        jmsDataset = new JMSDataset();
+        jmsDataset.setDatastore(jmsDatastore);
+        jmsDataset.setDestination("topic");
     }
 
     public void displayManuallyTable() {
@@ -145,6 +187,8 @@ public class JdbcDemo extends ConnectorsHandler {
         log.warn("[useDatasource] meta: {}", sqlConnection.getMetaData().getTypeInfo());
 
         final Statement stm = sqlConnection.createStatement();
+        stm.execute("CREATE TABLE IF NOT EXISTS users (id INT AUTO_INCREMENT PRIMARY KEY, name VARCHAR(255), active BOOLEAN)");
+
         stm.execute("DROP TABLE IF EXISTS test");
         stm.execute("CREATE TABLE test (id INT PRIMARY KEY NOT NULL, nom VARCHAR(100))");
         stm.executeUpdate("INSERT INTO test VALUES(1, 'eg')");
@@ -173,6 +217,13 @@ public class JdbcDemo extends ConnectorsHandler {
             final Schema schema = uiService.guessSchema(dataset);
             log.warn("[executeServices] `{}' table schema: {} ", tableInfo.getName(), schema);
         });
+
+        // jms service test
+        log.error("[executeServices] JMS Providers {}", jmsService.getProviders().stream().map(p -> p.getDisplayName())
+                .collect(toList()));
+        log.error("[executeServices] JMS Brokers {}", jmsUiService.listSupportedBroker().getItems().stream()
+                .map(i -> i.getId()).collect(toList()));
+        log.error("[executeServices] JMS Healthcheck {}", jmsUiService.healthCheck(jmsDatastore).toString());
     }
 
 }
