@@ -7,6 +7,21 @@ Main trick for fixing classloader and injections issues relies on the =internal=
 
 Inspired from =component-runtime-junit= module.
 
+*** Quickstart
+Define in your main pom.xml your connector dependency.
+Create a class inheriting from the =ConnectorsHandler= class with the =WithConnector= annotation.
+
+#+BEGIN_SRC java
+@WithConnector(value = "jdbc", jarLocation = "/home/undx/.m2/repository/org/talend/components/jdbc/1.61.0/jdbc-1.61.0.jar")
+public class JdbcDemo extends ConnectorsHandler {
+
+      @Service
+      UIActionService uiService;
+#+END_SRC
+
+See _JdbcDemo_ in project.
+
+
 ** Roadmap and potential enhancements
 - move internals to a framework module.
 - allow to specify more than one connector.
